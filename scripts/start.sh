@@ -5,15 +5,15 @@ if [[ -f .env ]]; then set -a; source .env; set +a; fi
 if [[ -f config/domains.local.env ]]; then
     while IFS= read -r entry || [[ -n $entry ]]; do
         case "$entry" in ''|'#'*) continue ;; esac
-        if [[ ! $entry =~ ^(DIRECT_DOMAINS|MAC_DNS_DOMAINS)=([a-zA-Z0-9.,-]*)$ ]]; then
+        if [[ ! $entry =~ ^DIRECT_DOMAINS=([a-zA-Z0-9.,-]*)$ ]]; then
             echo 'Invalid config/domains.local.env entry' >&2; exit 1
         fi
         export "$entry"
     done < config/domains.local.env
 fi
 : "${VPS_IP:?set VPS_IP in .env}"
-if [[ -n ${MAC_DNS_DOMAINS:-} ]]; then
-    bash scripts/install-mac-resolver.sh "$MAC_DNS_DOMAINS"
+if [[ -n ${DIRECT_DOMAINS:-} ]]; then
+    bash scripts/install-mac-resolver.sh "$DIRECT_DOMAINS"
 fi
 for file in wg.key server.pub; do
     [[ -s config/tunnel/$file ]] || { echo "缺少 config/tunnel/$file；请先按 README 配对 VPS。旧容器未改动。"; exit 1; }
@@ -24,7 +24,7 @@ podman build --build-arg "BASE_IMAGE=${BASE_IMAGE:-ubuntu:24.04}" -f Containerfi
 args=(--privileged --http-proxy=false --network bridge --hostname claude-us
     -v "$PWD/config/tunnel:/etc/cage-peer:ro" -e "VPS_IP=${VPS_IP:?set VPS_IP in .env}"
     -e "WG_PORT=${WG_PORT:-51820}" -e "EXPECTED_EGRESS_IP=${EXPECTED_EGRESS_IP:-${VPS_IP:?set VPS_IP in .env}}"
-    -e "MAC_DNS_DOMAINS=${MAC_DNS_DOMAINS:-}" -e "DIRECT_DOMAINS=${DIRECT_DOMAINS:-}" -e "INTERNAL_DNS_SERVER=${INTERNAL_DNS_SERVER:-}" -e "TZ=${TZ:-America/New_York}")
+    -e "DIRECT_DOMAINS=${DIRECT_DOMAINS:-}" -e "TZ=${TZ:-America/New_York}")
 if ! podman inspect -f '{{.ImageName}}' "$name" 2>/dev/null | grep -Fq "$image"; then
     podman run --rm "${args[@]}" -e ENABLE_GUI=false -e ENABLE_DIND=false "$image" /bin/true
 fi

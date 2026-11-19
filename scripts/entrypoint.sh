@@ -1,14 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+if [[ -n ${MAC_DNS_DOMAINS:-} ]]; then echo 'Move all local suffixes to DIRECT_DOMAINS' >&2; exit 1; fi
 rm -f /run/cage-ready
 setup-network
 printf 'nameserver 127.0.0.1\n' > /etc/resolv.conf
 /usr/local/bin/named-direct &
 named_pid=$!
 cp /etc/cage-dns.conf /run/cage-dns.conf
-combined="${DIRECT_DOMAINS:-}${DIRECT_DOMAINS:+${MAC_DNS_DOMAINS:+,}}${MAC_DNS_DOMAINS:-}"
-IFS=',' read -ra suffixes <<< "$combined"
+IFS=',' read -ra suffixes <<< "${DIRECT_DOMAINS:-}"
 for suffix in "${suffixes[@]}"; do
     [[ $suffix =~ ^([A-Za-z0-9-]+\.)+[A-Za-z0-9-]+$ ]] || { echo 'Invalid DIRECT_DOMAINS'; exit 1; }
     printf 'server=/%s/127.0.0.1#5354\n' "$suffix" >> /run/cage-dns.conf

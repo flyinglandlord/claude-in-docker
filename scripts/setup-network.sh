@@ -49,7 +49,7 @@ ip rule add pref 94 lookup main suppress_prefixlength 0
 ip route add default dev wg-cage table 152
 ip rule add pref 95 lookup 152
 ip rule add pref 96 prohibit
-if [[ -n ${MAC_DNS_DOMAINS:-} ]]; then
+if [[ -n ${DIRECT_DOMAINS:-} ]]; then
     bridge=$(getent -s files ahostsv4 host.containers.internal | awk 'NR==1 {print $1}')
     python3 -c 'import ipaddress,sys; ipaddress.IPv4Address(sys.argv[1])' "$bridge"
     printf '%s\n' "$bridge" > /run/cage-mac-ip
