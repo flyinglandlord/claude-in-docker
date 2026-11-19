@@ -1,0 +1,13 @@
+.env*
+!.env.example
+config/tunnel/
+config/proxy.conf
+config/.proxy_secret
+data/
+*.key
+*.pub
+*.pem
+*.log
+known_hosts*
+.DS_Store
+.git/

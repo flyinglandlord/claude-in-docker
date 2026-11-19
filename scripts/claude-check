@@ -1,0 +1,16 @@
+#!/bin/bash
+set -euo pipefail
+unset http_proxy https_proxy all_proxy HTTP_PROXY HTTPS_PROXY ALL_PROXY
+[[ $(ip -4 route get 1.1.1.1) == *'dev wg-cage '* ]]
+[[ $(ip -4 route get 10.0.0.1) != *'dev wg-cage '* ]]
+nft list chain inet cage out | grep -F 'policy drop' >/dev/null
+nft list chain inet cage forward | grep -F 'policy drop' >/dev/null
+trace=$(curl --noproxy '*' -4fsS --max-time 12 https://www.cloudflare.com/cdn-cgi/trace)
+observed=$(sed -n 's/^ip=//p' <<< "$trace")
+country=$(sed -n 's/^loc=//p' <<< "$trace")
+echo "Cloudflare 出口: ${observed:-未知} 国家: ${country:-未知}"
+[[ $observed == "${EXPECTED_EGRESS_IP:-${VPS_IP:?set VPS_IP in .env}}" && $country == US ]]
+second=$(curl --noproxy '*' -4fsS --max-time 12 https://api.ipify.org)
+[[ $second == "$observed" ]] || { echo '两个出口观测不一致'; exit 1; }
+echo '公网 IPv4 出口通过；非回环 IPv6 禁用。此结果不是账号或浏览器指纹认证。'
+runuser -u claude -- env HOME=/tmp timeout 65 python3 /usr/local/bin/browser-check.py

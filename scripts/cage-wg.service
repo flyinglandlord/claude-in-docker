@@ -1,0 +1,13 @@
+[Unit]
+Description=Container WireGuard exit
+After=network-online.target
+Wants=network-online.target
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/cage-wireguard-go -f wg-cage
+ExecStartPost=/usr/local/sbin/cage-wg-up
+ExecStopPost=-/sbin/iptables -t nat -D POSTROUTING -s 10.77.0.2/32 -o eth0 -j MASQUERADE
+Restart=on-failure
+RestartSec=3
+[Install]
+WantedBy=multi-user.target

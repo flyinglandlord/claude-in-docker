@@ -1,0 +1,10 @@
+#!/bin/bash
+set -eu
+for attempt in {1..40}; do
+    [[ -S /var/run/wireguard/wg-cage.sock ]] && break
+    sleep .1
+done
+/usr/local/bin/cage-wg set wg-cage private-key /etc/cage-wg/server.key listen-port 51820 peer "$(cat /etc/cage-wg/client.pub)" allowed-ips 10.77.0.2/32
+ip addr add 10.77.0.1/30 dev wg-cage
+ip link set wg-cage mtu 1380 up
+iptables -t nat -A POSTROUTING -s 10.77.0.2/32 -o eth0 -j MASQUERADE

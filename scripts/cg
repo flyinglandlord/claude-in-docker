@@ -1,0 +1,23 @@
+#!/bin/bash
+# ============================================================
+# 进入 claude-in-docker 容器
+# 用法:
+#   cg         — 打开桌面 + 进入容器
+#   cg shell   — 只进入容器
+# ============================================================
+CONTAINER_NAME="${CONTAINER_NAME:-claude-in-docker}"
+NOVNC_PORT="${NOVNC_PORT:-6080}"
+NOVNC_URL="http://localhost:${NOVNC_PORT}/vnc.html?autoconnect=true&resize=scale&path=websockify"
+
+if ! podman container inspect -f '{{.State.Running}}' "${CONTAINER_NAME}" 2>/dev/null | grep -q true; then
+    echo "❌ 容器未运行，正在启动..."
+    cd "$(dirname "$(realpath "$0")")/.." && ./scripts/start.sh || exit 1
+fi
+
+if [ "${1:-}" != "shell" ]; then
+    echo "🌐 桌面: ${NOVNC_URL}"
+    open "${NOVNC_URL}" 2>/dev/null &
+fi
+
+exec podman exec -it "${CONTAINER_NAME}" \
+    su - claude -c "export DISPLAY=:99; export PATH=/usr/local/bin:\$PATH; exec bash --login"
