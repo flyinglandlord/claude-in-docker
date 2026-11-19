@@ -10,3 +10,4 @@ data/
 *.log
 known_hosts*
 .DS_Store
+config/domains.local.env

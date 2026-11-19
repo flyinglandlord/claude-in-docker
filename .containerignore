@@ -11,3 +11,4 @@ data/
 known_hosts*
 .DS_Store
 .git/
+config/domains.local.env

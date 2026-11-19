@@ -6,11 +6,13 @@ services:
     hostname: claude-us
     privileged: true
     network_mode: bridge
+    env_file:
+      - path: ./config/domains.local.env
+        required: false
     environment:
       VPS_IP: ${VPS_IP:?set VPS_IP in .env}
       WG_PORT: ${WG_PORT:-51820}
       EXPECTED_EGRESS_IP: ${EXPECTED_EGRESS_IP:-${VPS_IP:?set VPS_IP in .env}}
-      DIRECT_DOMAINS: ${DIRECT_DOMAINS:-}
       INTERNAL_DNS_SERVER: ${INTERNAL_DNS_SERVER:-}
       TZ: ${TZ:-America/New_York}
       ENABLE_GUI: ${ENABLE_GUI:-true}

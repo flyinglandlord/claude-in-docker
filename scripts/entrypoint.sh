@@ -7,7 +7,8 @@ printf 'nameserver 127.0.0.1\n' > /etc/resolv.conf
 /usr/local/bin/named-direct &
 named_pid=$!
 cp /etc/cage-dns.conf /run/cage-dns.conf
-IFS=',' read -ra suffixes <<< "${DIRECT_DOMAINS:-}"
+combined="${DIRECT_DOMAINS:-}${DIRECT_DOMAINS:+${MAC_DNS_DOMAINS:+,}}${MAC_DNS_DOMAINS:-}"
+IFS=',' read -ra suffixes <<< "$combined"
 for suffix in "${suffixes[@]}"; do
     [[ $suffix =~ ^([A-Za-z0-9-]+\.)+[A-Za-z0-9-]+$ ]] || { echo 'Invalid DIRECT_DOMAINS'; exit 1; }
     printf 'server=/%s/127.0.0.1#5354\n' "$suffix" >> /run/cage-dns.conf
